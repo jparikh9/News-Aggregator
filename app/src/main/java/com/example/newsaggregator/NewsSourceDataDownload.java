@@ -56,6 +56,7 @@ public class NewsSourceDataDownload {
                     newsSourceList.add(newsSource);
                 }
 
+                mainActivity.updateDrawer(newsSourceList);
             }catch(Exception e){
                 throw new RuntimeException(e);
             }
