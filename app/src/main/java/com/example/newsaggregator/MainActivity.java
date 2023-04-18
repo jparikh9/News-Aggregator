@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.Activity;
 import android.content.res.Configuration;
@@ -22,6 +23,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.newsaggregator.databinding.ActivityMainBinding;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,27 +37,36 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private DrawerLayout drawerLayout;
     private ListView drawerList;
-    private TextView textView;
+    //private TextView textView;
     private ActionBarDrawerToggle drawerToggle;
     private String[] items;
     private NewsSourceDataDownload newsSourceDataDownload;
+    private NewsDataDownload newsDataDownload;
     private Menu menu;
 
     private List<NewsSource> newsSourceList = new ArrayList<>();
 
     private ArrayList<String> current_items = new ArrayList<>();
+    private ArrayList<NewsData> newsDataArrayList = new ArrayList<>();
+    private NewsArticleAdapter newsArticleAdapter;
+
+    private ViewPager2 viewPager2;
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView = findViewById(R.id.textView1);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        //textView = findViewById(R.id.textView1);
 
 
 
-        drawerLayout = findViewById(R.id.drawer_layout);
-        drawerList = findViewById(R.id.news_source_drawer);
+        drawerLayout =binding.drawerLayout;
+        drawerList = binding.newsSourceDrawer;
 
         //drawerList.setAdapter(new ArrayAdapter<>(this,
           //      R.layout.news_drawer_list_item, items));
@@ -77,6 +89,11 @@ public class MainActivity extends AppCompatActivity {
 
         newsSourceDataDownload = new NewsSourceDataDownload();
         newsSourceDataDownload.downloadNewsSourceData(this);
+
+        newsArticleAdapter = new NewsArticleAdapter(this, newsDataArrayList);
+        viewPager2 = findViewById(R.id.view_pager);
+        viewPager2.setAdapter(newsArticleAdapter);
+        viewPager2.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
     }
 
     @Override
@@ -127,9 +144,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectItem(int position) {
-        textView.setText(String.format(Locale.getDefault(),
-                "You picked %s", this.current_items.get(position).toString()));
+        //textView.setText(String.format(Locale.getDefault(),
+         //       "You picked %s", this.current_items.get(position).toString()));
+        newsDataDownload = new NewsDataDownload(this.current_items.get(position).toString());
+        newsDataDownload.downloadNewsArticlesData(this);
         drawerLayout.closeDrawer(drawerList);
+    }
+
+    public void updateArticlesList(ArrayList<NewsData> newsDataArrayList){
+        this.newsDataArrayList.addAll(newsDataArrayList);
+        newsArticleAdapter.notifyItemRangeChanged(0,this.newsDataArrayList.size());
     }
 
     public void updateDrawer(List<NewsSource> newsSourceList){
