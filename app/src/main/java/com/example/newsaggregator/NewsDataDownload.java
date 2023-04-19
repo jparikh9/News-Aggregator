@@ -1,7 +1,10 @@
 package com.example.newsaggregator;
 
+import android.content.ComponentName;
+import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.view.View;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -81,4 +84,6 @@ public class NewsDataDownload {
         }
 
     }
+
+
 }

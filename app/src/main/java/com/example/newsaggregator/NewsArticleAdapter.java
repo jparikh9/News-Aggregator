@@ -1,5 +1,6 @@
 package com.example.newsaggregator;
 
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,10 +34,15 @@ public class NewsArticleAdapter extends
 
     @Override
     public void onBindViewHolder(@NonNull NewsArticlesViewHolder holder, int position) {
+        holder.headline.setVisibility(View.VISIBLE);
+        holder.articleDate.setVisibility(View.VISIBLE);
+        holder.author.setVisibility(View.VISIBLE);
+        holder.articleText.setVisibility(View.VISIBLE);
+        holder.image.setVisibility(View.VISIBLE);
         NewsData newsData = articleList.get(position);
 
         //final int resourceId = mainActivity.getResources().
-         //       getIdentifier(zodiac.getName(), "drawable", mainActivity.getPackageName());
+        //       getIdentifier(zodiac.getName(), "drawable", mainActivity.getPackageName());
         if(newsData.getTitle().equalsIgnoreCase("null") || newsData.getTitle().length() == 0){
             holder.headline.setVisibility(View.INVISIBLE);
         }
@@ -65,28 +71,20 @@ public class NewsArticleAdapter extends
         }
 
         if(newsData.getUrlToImage().equalsIgnoreCase("null") || newsData.getUrlToImage().length() == 0){
-            holder.image.setVisibility(View.INVISIBLE);
+            Glide.with(mainActivity)
+                    .load(R.drawable.noimage).placeholder(R.drawable.noimage)
+                    .into(holder.image);
         }
         else{
-            //downlaodImage(newsData.getUrlToImage());
-            //holder.articleText.setText(newsData.getDescription());
+            String[] k = newsData.getUrlToImage().split("//");
+            String imageurl = "https://"+ k[1];
+            Glide.with(mainActivity)
+                    .load(imageurl).error(R.drawable.brokenimage).placeholder(R.drawable.loading)
+                    .into(holder.image);
 
-            if(newsData.getUrlToImage().isEmpty()){
-                Glide.with(mainActivity)
-                        .load(R.drawable.noimage).placeholder(R.drawable.noimage)
-                        .into(holder.image);
-
-            }
-            else {
-                String[] k = newsData.getUrlToImage().split("//");
-                String imageurl = "https://"+ k[1];
-                Glide.with(mainActivity)
-                        .load(imageurl).error(R.drawable.brokenimage).placeholder(R.drawable.loading)
-                        .into(holder.image);
-
-
-            }
         }
+
+
 
 
 
@@ -103,25 +101,23 @@ public class NewsArticleAdapter extends
 
     public String convertDate(String dt){
         DateTimeFormatter parser = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            parser = DateTimeFormatter.ISO_DATE_TIME;
-        }
         Instant instant = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            instant = parser.parse(dt, Instant::from);
-        }
         LocalDateTime localDateTime = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-        }
-
+        String d = "";
         DateTimeFormatter dateTimeFormatter = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            parser = DateTimeFormatter.ISO_DATE_TIME;
+            instant = parser.parse(dt, Instant::from);
+            localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
             dateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm ");
+            d = localDateTime.format(dateTimeFormatter);
         }
 
-        return localDateTime.format(dateTimeFormatter);
+
+        return d;
     }
+
+
 
 
 }

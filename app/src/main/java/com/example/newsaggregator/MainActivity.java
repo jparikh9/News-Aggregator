@@ -3,13 +3,17 @@ package com.example.newsaggregator;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.text.SpannableString;
@@ -24,6 +28,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.newsaggregator.databinding.ActivityMainBinding;
+import com.example.newsaggregator.databinding.ArticleLayoutBinding;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -45,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private Menu menu;
 
     private List<NewsSource> newsSourceList = new ArrayList<>();
+    private ArrayList<NewsSource> currentSourceList = new ArrayList<>();
 
     private ArrayList<String> current_items = new ArrayList<>();
     private ArrayList<NewsData> newsDataArrayList = new ArrayList<>();
@@ -52,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager2;
     ActivityMainBinding binding;
+    //NewsArticlesViewHolder newsArticlesViewHolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         newsSourceDataDownload.downloadNewsSourceData(this);
 
         newsArticleAdapter = new NewsArticleAdapter(this, newsDataArrayList);
-        viewPager2 = findViewById(R.id.view_pager);
+        viewPager2 = binding.viewPager;
         viewPager2.setAdapter(newsArticleAdapter);
         viewPager2.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
     }
@@ -121,17 +128,20 @@ public class MainActivity extends AppCompatActivity {
 
     public void updateDrawerListAfterSelection(String title){
         this.current_items.clear();
+        this.currentSourceList.clear();
         //ArrayList<String> items_current = new ArrayList<>();
         //items_current = new String[this.newsSourceList.size()];
         if(title.equalsIgnoreCase("all")){
             for(int i=0;i<newsSourceList.size();i++){
                 current_items.add(newsSourceList.get(i).getName());
+                currentSourceList.add(newsSourceList.get(i));
             }
         }
         else{
             for(int i = 0;i<this.newsSourceList.size();i++){
                 if(this.newsSourceList.get(i).getCategory().equalsIgnoreCase(title)){
                     current_items.add(newsSourceList.get(i).getName());
+                    currentSourceList.add(newsSourceList.get(i));
                 }
 
             }
@@ -146,18 +156,23 @@ public class MainActivity extends AppCompatActivity {
     private void selectItem(int position) {
         //textView.setText(String.format(Locale.getDefault(),
          //       "You picked %s", this.current_items.get(position).toString()));
-        newsDataDownload = new NewsDataDownload(this.current_items.get(position).toString());
+        newsDataDownload = new NewsDataDownload(this.currentSourceList.get(position).getId());
         newsDataDownload.downloadNewsArticlesData(this);
+        String app_title = new StringBuilder().append(this.currentSourceList.get(position).getName()).append(" (").append(current_items.size()).append(")").toString();
+        setTitle(app_title);
         drawerLayout.closeDrawer(drawerList);
     }
 
     public void updateArticlesList(ArrayList<NewsData> newsDataArrayList){
+        this.newsDataArrayList.clear();
         this.newsDataArrayList.addAll(newsDataArrayList);
+
         newsArticleAdapter.notifyItemRangeChanged(0,this.newsDataArrayList.size());
     }
 
     public void updateDrawer(List<NewsSource> newsSourceList){
         this.newsSourceList.addAll(newsSourceList);
+        this.currentSourceList.addAll(newsSourceList);
         this.current_items.clear();
         //items = new String[newsSourceList.size()];
         for(int i=0;i<newsSourceList.size();i++){
@@ -247,5 +262,36 @@ public class MainActivity extends AppCompatActivity {
         if (view == null)
             view = new View(this);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    public void goToInfoPage(View v) {
+        try{
+            String pos = "";
+            int pageno = viewPager2.getCurrentItem();
+            String website = this.newsDataArrayList.get(pageno).getUrl();
+            //int o = pageno;
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(website));
+            ComponentName componentName = intent.resolveActivity(getPackageManager());
+
+
+            if (componentName != null) {
+                startActivity(intent);
+            } else {
+                makeErrorAlert("No Application found that handles ACTION_VIEW (https) intents");
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
+    private void makeErrorAlert(String msg) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setMessage(msg);
+        builder.setTitle("No App Found");
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
